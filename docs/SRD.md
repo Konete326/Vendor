@@ -4,63 +4,101 @@
 
 ---
 
-## 1. System Requirements & Context
-This document specifies the software requirements for the Bike Jumps Management System. The system manages cataloging components, assembly creations, and bike associations.
+## 1. System Context
+This document describes the functional and non-functional requirements for the Bike Jumps Management System. It covers the end-to-end workflows from receiving bulk parts, grading and stocking components, assembling jump shocks, and tracking worker production.
 
 ---
 
-## 2. Functional Requirements & Use Cases
+## 2. Core Functional Requirements
 
-### 2.1 Use Case 1: POS Parts Management
-- **Primary Actor**: Technician / Vendor
-- **Description**: Add parts to catalog, edit stock levels, view prices.
-- **System Action**: Provide REST API to perform CRUD operations on `/api/parts`.
+### 2.1 User Authentication
+- Users must register with a Name, Email, and Password.
+- Users must log in with valid credentials to access the system.
+- Session is maintained using a secure HTTP-only cookie.
+- Users can log out, which clears the session cookie.
+- A logged-in user can view their own profile details.
 
-### 2.2 Use Case 2: Jump Assembly Creation (POS style checkout)
-- **Primary Actor**: Technician
-- **Description**: Select multiple parts, customize quantities, assign tuning metrics, and save to a Bike model.
-- **System Action**: Create transaction endpoint `/api/jumps` which calculates total cost, deducts items from parts inventory, and links to target Bike.
+### 2.2 Parts Catalog Management
+- Managers can add new parts to the catalog (name, SKU, category, price, stock, image).
+- All users can browse and search the parts list with filters (by category, quality grade).
+- Managers can update part details including price and stock quantity.
+- Managers can delete a part from the catalog.
 
-### 2.3 Use Case 3: Theme Toggle
-- **Primary Actor**: End User
-- **Description**: Switch between White Theme and Black Theme.
-- **System Action**: Change HTML class tag to toggle theme styling instantly.
+### 2.3 Bulk Stock Receiving
+- When a shipment arrives from a supplier, the manager logs a Bulk Stock Entry.
+- Each entry specifies the supplier name, invoice reference, total shipment cost, and a list of individual parts with quantities and unit cost.
+- On successful submission, the stock count for each listed part is incremented automatically.
+
+### 2.4 Jump Assembly (POS Workflow)
+- Technician opens a new Assembly Ticket from the POS interface.
+- Selects the bike category (70cc, 125cc, 150cc, Other).
+- Adds components from the parts catalog to the ticket, selecting quantity and quality grade for each.
+- Selects the worker's name who performed the physical assembly.
+- On saving, the system:
+  - Calculates total assembly cost.
+  - Deducts part quantities from stock.
+  - Saves the assembly record with status "Pending".
+- Manager or admin marks the assembly as "Ready" when the physical build is verified.
+
+### 2.5 Worker Production Summary
+- The system maintains a log of all assemblies and their associated worker names.
+- Users can filter completed assemblies by worker name to view production output.
 
 ---
 
 ## 3. API Endpoints Specification
 
-### 3.1 Authentication
-- `POST /api/auth/register` - Create user account
-- `POST /api/auth/login` - Set session cookie
-- `POST /api/auth/logout` - Clear session cookie
-- `GET /api/auth/profile` - Fetch current user payload
+### 3.1 Authentication Endpoints
 
-### 3.2 Parts Catalog
-- `GET /api/parts` - Fetch and filter list of parts
-- `POST /api/parts` - Add new part (admin/vendor only)
-- `PUT /api/parts/:id` - Edit spec, price or stock (admin/vendor only)
-- `DELETE /api/parts/:id` - Remove part from inventory
-
-### 3.3 Jump Assemblies
-- `POST /api/jumps` - Create new jump assembly configuration
-- `GET /api/jumps` - Retrieve configurations
-- `GET /api/jumps/:id` - Retrieve specific configuration with populated parts list
-
-### 3.4 Bikes
-- `POST /api/bikes` - Create bike record
-- `GET /api/bikes` - List all bikes (with filtering by category: 70cc, 125cc, 150cc)
-- `GET /api/bikes/:id` - Retrieve bike details with history of jumps configurations
-
-### 3.5 Workers
-- `POST /api/workers` - Register new worker profile
-- `GET /api/workers` - List all workers
-- `GET /api/workers/:id/stats` - Fetch production metrics (ready jump count and wages due) for a specific worker
-- `PUT /api/jumps/:id/status` - Mark jump assembly as 'Ready' (updating status and counting towards worker tally)
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| POST | `/api/auth/register` | Register a new user account | Public |
+| POST | `/api/auth/login` | Authenticate and set session cookie | Public |
+| POST | `/api/auth/logout` | Clear session cookie | Public |
+| GET | `/api/auth/profile` | Get currently logged-in user details | Private |
 
 ---
 
-## 4. Non-Functional Constraints
-- **Performance**: API responses for list fetches should resolve in < 200ms.
-- **Security**: Prevent unauthorized actions by checking JWT payload via HTTP-only cookie in requests.
-- **Responsiveness**: Entire layout must adapt from mobile screens to wide monitors cleanly.
+### 3.2 Parts Catalog Endpoints
+
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| GET | `/api/parts` | List all parts (supports search & filter queries) | Private |
+| POST | `/api/parts` | Add a new part to the catalog | Admin / Vendor |
+| GET | `/api/parts/:id` | Get details of a single part | Private |
+| PUT | `/api/parts/:id` | Update part details, price, or stock | Admin / Vendor |
+| DELETE | `/api/parts/:id` | Remove a part from the catalog | Admin |
+
+---
+
+### 3.3 Bulk Stock Entry Endpoints
+
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| POST | `/api/stock` | Log a new bulk parts shipment entry | Admin / Vendor |
+| GET | `/api/stock` | List all stock entry records | Private |
+| GET | `/api/stock/:id` | Get details of a specific shipment record | Private |
+
+---
+
+### 3.4 Jump Assembly Endpoints
+
+| Method | Endpoint | Description | Access |
+|---|---|---|---|
+| POST | `/api/jumps` | Create a new jump assembly ticket | Private |
+| GET | `/api/jumps` | List all assemblies (filter by status, worker, category) | Private |
+| GET | `/api/jumps/:id` | Get full details of a single assembly with populated parts | Private |
+| PUT | `/api/jumps/:id/status` | Update assembly status to Ready | Admin / Vendor |
+
+---
+
+## 4. Non-Functional Requirements
+
+| Category | Requirement |
+|---|---|
+| Performance | List endpoints should respond in under 200ms |
+| Security | All write routes are JWT-protected via HTTP-only cookie |
+| Responsiveness | Fully responsive from mobile (320px) to desktop (1920px) |
+| Scalability | MongoDB Atlas allows horizontal scaling as data grows |
+| Image Storage | All images stored on Cloudinary — no local file serving |
+| Theme | UI supports Dark and Light modes with instant toggle |
