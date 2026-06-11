@@ -3,47 +3,51 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import authRoutes from './routes/authRoutes.js';
 
-// Load environment variables
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 dotenv.config();
 
-// Connect to MongoDB
 connectDB();
 
 const app = express();
 
-// HTTP request logger middleware
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// Enable CORS
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
     credentials: true,
   })
 );
 
-// Body parser middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Cookie parser middleware
 app.use(cookieParser());
 
-// Base Route
 app.get('/', (req, res) => {
   res.json({ message: 'API is running successfully...' });
 });
 
-// API Routes
 app.use('/api/auth', authRoutes);
 
-// Error Handling Middleware
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.join(__dirname, '..', 'client', 'dist');
+  app.use(express.static(clientBuildPath));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
+
 app.use(notFound);
 app.use(errorHandler);
 

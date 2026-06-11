@@ -158,6 +158,7 @@ cd client && npm run dev
 | [PRD.md](./docs/PRD.md) | Product requirements, user stories, and business workflows |
 | [TRD.md](./docs/TRD.md) | Architecture, database models, Cloudinary, and auth strategy |
 | [SRD.md](./docs/SRD.md) | API endpoint specifications and system constraints |
+| [cloude.md](./cloude.md) | Development guide, coding standards, and operational rules |
 
 ---
 
