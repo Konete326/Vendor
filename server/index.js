@@ -8,6 +8,9 @@ import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import authRoutes from './routes/authRoutes.js';
+import partRoutes from './routes/partRoutes.js';
+import stockRoutes from './routes/stockRoutes.js';
+import jumpRoutes from './routes/jumpRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,6 +41,9 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/parts', partRoutes);
+app.use('/api/stock', stockRoutes);
+app.use('/api/jumps', jumpRoutes);
 
 if (process.env.NODE_ENV === 'production') {
   const clientBuildPath = path.join(__dirname, '..', 'client', 'dist');
