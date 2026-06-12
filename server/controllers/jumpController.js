@@ -1,59 +1,78 @@
 import JumpAssembly from '../models/JumpAssembly.js';
 import Part from '../models/Part.js';
+import { getPriceForGrade, calculateAssemblyTotal } from '../utils/partPricing.js';
 
-// @desc    Create a new jump assembly
-// @route   POST /api/jumps
-// @access  Protected
+const populateParts = async (partsInput) => {
+  const partIds = partsInput.map((p) => p.part);
+  const dbParts = await Part.find({ _id: { $in: partIds } }).lean();
+  const partMap = Object.fromEntries(dbParts.map((p) => [p._id.toString(), p]));
+
+  return partsInput.map((item) => {
+    const partDoc = partMap[item.part.toString()];
+    if (!partDoc) throw new Error('One or more referenced parts do not exist');
+    if (partDoc.stock < item.quantity) {
+      throw new Error(`Insufficient stock for ${partDoc.name}. Available: ${partDoc.stock}`);
+    }
+    return {
+      ...item,
+      partDoc,
+      unitPrice: getPriceForGrade(partDoc, item.qualityGrade || 'Grade B'),
+    };
+  });
+};
+
 export const createJump = async (req, res, next) => {
   try {
-    const { name, displacement, parts, notes } = req.body;
+    const { name, bikeCategory, parts, assembledBy, notes } = req.body;
 
-    if (!parts || parts.length === 0) {
+    if (!parts?.length) {
       res.status(400);
       return next(new Error('At least one part is required'));
     }
 
-    const partIds = parts.map((p) => p.part);
-    const existingParts = await Part.find({ _id: { $in: partIds } }).lean();
+    const enriched = await populateParts(parts);
+    const totalCost = calculateAssemblyTotal(enriched);
 
-    if (existingParts.length !== partIds.length) {
-      res.status(400);
-      return next(new Error('One or more referenced parts do not exist'));
+    for (const item of enriched) {
+      await Part.findByIdAndUpdate(item.part, { $inc: { stock: -item.quantity } });
     }
 
     const assembly = await JumpAssembly.create({
       name,
-      displacement,
-      parts,
+      bikeCategory,
+      parts: parts.map((p) => ({
+        part: p.part,
+        quantity: p.quantity,
+        qualityGrade: p.qualityGrade || 'Grade B',
+      })),
+      totalCost,
+      assembledBy,
       notes,
-      assembledBy: req.user._id,
-      status: 'draft',
+      status: 'Pending',
+      createdBy: req.user._id,
     });
 
-    res.status(201).json({ success: true, message: 'Jump assembly created', data: assembly });
+    res.status(201).json({ success: true, message: 'Assembly ticket created', data: assembly });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Get all jump assemblies (paginated)
-// @route   GET /api/jumps
-// @access  Protected
 export const getJumps = async (req, res, next) => {
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-
     const filter = {};
-    if (req.query.displacement) filter.displacement = req.query.displacement;
+
+    if (req.query.bikeCategory) filter.bikeCategory = req.query.bikeCategory;
     if (req.query.status) filter.status = req.query.status;
+    if (req.query.worker) filter.assembledBy = { $regex: req.query.worker, $options: 'i' };
 
     const total = await JumpAssembly.countDocuments(filter);
-
     const jumps = await JumpAssembly.find(filter)
-      .populate('parts.part', 'name category brand')
-      .populate('assembledBy', 'name')
+      .populate('parts.part', 'name category brand sku price')
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
@@ -68,14 +87,11 @@ export const getJumps = async (req, res, next) => {
   }
 };
 
-// @desc    Get jump assembly by ID
-// @route   GET /api/jumps/:id
-// @access  Protected
 export const getJumpById = async (req, res, next) => {
   try {
     const assembly = await JumpAssembly.findById(req.params.id)
-      .populate('parts.part', 'name category brand price stock')
-      .populate('assembledBy', 'name email')
+      .populate('parts.part', 'name category brand sku price gradePrices stock')
+      .populate('createdBy', 'name email')
       .lean();
 
     if (!assembly) {
@@ -89,11 +105,9 @@ export const getJumpById = async (req, res, next) => {
   }
 };
 
-// @desc    Update a jump assembly
-// @route   PUT /api/jumps/:id
-// @access  Protected
-export const updateJump = async (req, res, next) => {
+export const updateJumpStatus = async (req, res, next) => {
   try {
+    const { status } = req.body;
     const assembly = await JumpAssembly.findById(req.params.id);
 
     if (!assembly) {
@@ -101,43 +115,28 @@ export const updateJump = async (req, res, next) => {
       return next(new Error('Jump assembly not found'));
     }
 
-    const { name, displacement, parts, status, qualityGrade, notes } = req.body;
-
-    if (name !== undefined) assembly.name = name;
-    if (displacement !== undefined) assembly.displacement = displacement;
-    if (parts !== undefined) assembly.parts = parts;
-    if (qualityGrade !== undefined) assembly.qualityGrade = qualityGrade;
-    if (notes !== undefined) assembly.notes = notes;
-
-    if (status !== undefined) {
-      if (status === 'completed' && assembly.status !== 'completed') {
-        assembly.completedAt = Date.now();
-      }
-      assembly.status = status;
+    if (!['Pending', 'Ready'].includes(status)) {
+      res.status(400);
+      return next(new Error('Invalid status'));
     }
 
+    assembly.status = status;
     const updated = await assembly.save();
 
-    res.json({ success: true, message: 'Jump assembly updated', data: updated });
+    res.json({ success: true, message: 'Assembly status updated', data: updated });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Delete a jump assembly
-// @route   DELETE /api/jumps/:id
-// @access  Protected, Admin only
 export const deleteJump = async (req, res, next) => {
   try {
     const assembly = await JumpAssembly.findById(req.params.id);
-
     if (!assembly) {
       res.status(404);
       return next(new Error('Jump assembly not found'));
     }
-
     await assembly.deleteOne();
-
     res.json({ success: true, message: 'Jump assembly deleted', data: null });
   } catch (error) {
     next(error);

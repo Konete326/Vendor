@@ -1,20 +1,34 @@
 import Part from '../models/Part.js';
 import { uploadImage, deleteImage } from '../utils/cloudinaryUpload.js';
 
-// @desc    Create a new part
-// @route   POST /api/parts
-// @access  Private/Vendor
+const parseGradePrices = (body, basePrice) => {
+  if (body.gradePrices) {
+    const parsed = typeof body.gradePrices === 'string' ? JSON.parse(body.gradePrices) : body.gradePrices;
+    return {
+      gradeA: Number(parsed.gradeA) || basePrice,
+      gradeB: Number(parsed.gradeB) || basePrice,
+      gradeC: Number(parsed.gradeC) || basePrice,
+      gradeD: Number(parsed.gradeD) || basePrice,
+    };
+  }
+  return { gradeA: basePrice, gradeB: basePrice, gradeC: basePrice, gradeD: basePrice };
+};
+
 const createPart = async (req, res, next) => {
   try {
-    const { name, category, brand, modelCompatibility, price, description, unit } = req.body;
+    const { name, sku, category, brand, modelCompatibility, price, description, unit } = req.body;
+    if (!sku) {
+      res.status(400);
+      return next(new Error('SKU is required'));
+    }
+    const basePrice = Number(price);
 
     let image = { url: '', publicId: '' };
-    if (req.file) {
-      image = await uploadImage(req.file.buffer, 'vendor/parts');
-    }
+    if (req.file) image = await uploadImage(req.file.buffer, 'vendor/parts');
 
     const part = await Part.create({
       name,
+      sku: sku?.toUpperCase(),
       category,
       brand,
       modelCompatibility: modelCompatibility
@@ -22,7 +36,8 @@ const createPart = async (req, res, next) => {
           ? modelCompatibility
           : modelCompatibility.split(',').map((m) => m.trim())
         : [],
-      price,
+      price: basePrice,
+      gradePrices: parseGradePrices(req.body, basePrice),
       description,
       unit,
       image,
@@ -35,22 +50,20 @@ const createPart = async (req, res, next) => {
   }
 };
 
-// @desc    Get all parts (paginated, filterable)
-// @route   GET /api/parts
-// @access  Public
 const getParts = async (req, res, next) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.max(1, parseInt(req.query.limit) || 10);
     const skip = (page - 1) * limit;
-
     const filter = {};
+
     if (req.query.search) {
-      filter.name = { $regex: req.query.search, $options: 'i' };
+      filter.$or = [
+        { name: { $regex: req.query.search, $options: 'i' } },
+        { sku: { $regex: req.query.search, $options: 'i' } },
+      ];
     }
-    if (req.query.category) {
-      filter.category = req.query.category;
-    }
+    if (req.query.category) filter.category = req.query.category;
 
     const [parts, total] = await Promise.all([
       Part.find(filter).skip(skip).limit(limit).lean(),
@@ -67,9 +80,6 @@ const getParts = async (req, res, next) => {
   }
 };
 
-// @desc    Get single part by ID
-// @route   GET /api/parts/:id
-// @access  Public
 const getPartById = async (req, res, next) => {
   try {
     const part = await Part.findById(req.params.id).lean();
@@ -83,9 +93,6 @@ const getPartById = async (req, res, next) => {
   }
 };
 
-// @desc    Update a part
-// @route   PUT /api/parts/:id
-// @access  Private/Vendor
 const updatePart = async (req, res, next) => {
   try {
     const part = await Part.findById(req.params.id);
@@ -94,13 +101,18 @@ const updatePart = async (req, res, next) => {
       return next(new Error('Part not found'));
     }
 
-    const fields = ['name', 'category', 'brand', 'modelCompatibility', 'price', 'description', 'unit'];
+    const fields = ['name', 'sku', 'category', 'brand', 'modelCompatibility', 'price', 'description', 'unit'];
     fields.forEach((f) => {
-      if (req.body[f] !== undefined) part[f] = req.body[f];
+      if (req.body[f] !== undefined) part[f] = f === 'sku' ? req.body[f].toUpperCase() : req.body[f];
     });
 
     if (req.body.modelCompatibility && !Array.isArray(req.body.modelCompatibility)) {
       part.modelCompatibility = req.body.modelCompatibility.split(',').map((m) => m.trim());
+    }
+
+    if (req.body.price !== undefined) {
+      part.price = Number(req.body.price);
+      if (req.body.gradePrices) part.gradePrices = parseGradePrices(req.body, part.price);
     }
 
     if (req.file) {
@@ -115,9 +127,6 @@ const updatePart = async (req, res, next) => {
   }
 };
 
-// @desc    Delete a part
-// @route   DELETE /api/parts/:id
-// @access  Private/Admin
 const deletePart = async (req, res, next) => {
   try {
     const part = await Part.findById(req.params.id);
@@ -125,10 +134,8 @@ const deletePart = async (req, res, next) => {
       res.status(404);
       return next(new Error('Part not found'));
     }
-
     if (part.image?.publicId) await deleteImage(part.image.publicId);
     await part.deleteOne();
-
     res.json({ success: true, message: 'Part deleted successfully', data: null });
   } catch (error) {
     next(error);

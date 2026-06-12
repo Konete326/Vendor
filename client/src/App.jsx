@@ -1,18 +1,50 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
+import ProtectedRoute from './components/common/ProtectedRoute'
+import GuestRoute from './components/common/GuestRoute'
+import AppLayout from './components/layout/AppLayout'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Dashboard from './pages/Dashboard'
+import ProfilePage from './pages/ProfilePage'
+import PartsPage from './pages/parts/PartsPage'
+import AddPartPage from './pages/parts/AddPartPage'
+import EditPartPage from './pages/parts/EditPartPage'
+import StockPage from './pages/stock/StockPage'
+import AddStockPage from './pages/stock/AddStockPage'
+import JumpsPage from './pages/jumps/JumpsPage'
+import AddJumpPage from './pages/jumps/AddJumpPage'
+
 function App() {
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6">
-      <div className="max-w-md w-full bg-slate-800 rounded-2xl shadow-xl p-8 text-center border border-slate-700">
-        <h1 className="text-3xl font-extrabold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent mb-4">
-          Vendor Application
-        </h1>
-        <p className="text-slate-400 mb-6">
-          Vite + React client setup completed successfully with Tailwind CSS v4!
-        </p>
-        <div className="inline-block px-4 py-2 bg-slate-700 hover:bg-slate-650 transition rounded-lg text-sm text-teal-300 font-mono">
-          src/App.jsx is ready for editing
-        </div>
-      </div>
-    </div>
+    <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <Routes>
+            <Route element={<GuestRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Route>
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/parts" element={<PartsPage />} />
+                <Route path="/parts/add" element={<AddPartPage />} />
+                <Route path="/parts/:id/edit" element={<EditPartPage />} />
+                <Route path="/stock" element={<StockPage />} />
+                <Route path="/stock/add" element={<AddStockPage />} />
+                <Route path="/jumps" element={<JumpsPage />} />
+                <Route path="/jumps/add" element={<AddJumpPage />} />
+              </Route>
+            </Route>
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   )
 }
 

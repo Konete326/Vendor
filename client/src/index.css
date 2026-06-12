@@ -1,1 +1,30 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-app-bg: #f8fafc;
+  --color-app-panel: #ffffff;
+  --color-app-muted: #e2e8f0;
+  --color-app-border: #cbd5e1;
+  --color-app-input-border: #94a3b8;
+  --color-app-text: #0f172a;
+  --color-app-text-secondary: #475569;
+  --color-app-text-muted: #64748b;
+}
+
+@layer theme {
+  :root,
+  :host {
+    @variant dark {
+      --color-app-bg: #0f172a;
+      --color-app-panel: #1e293b;
+      --color-app-muted: #334155;
+      --color-app-border: #334155;
+      --color-app-input-border: #475569;
+      --color-app-text: #ffffff;
+      --color-app-text-secondary: #94a3b8;
+      --color-app-text-muted: #64748b;
+    }
+  }
+}

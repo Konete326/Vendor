@@ -3,26 +3,27 @@ import mongoose from 'mongoose';
 const jumpAssemblySchema = new mongoose.Schema(
   {
     name: { type: String, required: [true, 'Assembly name is required'], trim: true },
-    displacement: {
+    bikeCategory: {
       type: String,
-      required: [true, 'Displacement is required'],
-      enum: ['70cc', '100cc', '110cc', '125cc', '150cc'],
+      required: [true, 'Bike category is required'],
+      enum: ['70cc', '125cc', '150cc', 'Other'],
     },
     parts: [
       {
         part: { type: mongoose.Schema.Types.ObjectId, ref: 'Part', required: true },
         quantity: { type: Number, required: true, min: 1 },
+        qualityGrade: {
+          type: String,
+          enum: ['Grade A', 'Grade B', 'Grade C', 'Grade D'],
+          default: 'Grade B',
+        },
       },
     ],
-    status: {
-      type: String,
-      enum: ['draft', 'in-progress', 'completed', 'quality-checked'],
-      default: 'draft',
-    },
-    qualityGrade: { type: String, enum: ['A', 'B', 'C'] },
+    totalCost: { type: Number, default: 0, min: 0 },
+    assembledBy: { type: String, required: [true, 'Worker name is required'], trim: true },
+    status: { type: String, enum: ['Pending', 'Ready'], default: 'Pending' },
     notes: { type: String, trim: true },
-    assembledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    completedAt: { type: Date },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   },
   { timestamps: true }
 );

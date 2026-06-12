@@ -1,4 +1,5 @@
 import StockEntry from '../models/StockEntry.js';
+import BulkStockEntry from '../models/BulkStockEntry.js';
 import Part from '../models/Part.js';
 
 // @desc    Add a stock entry
@@ -35,6 +36,39 @@ export const addStockEntry = async (req, res, next) => {
   }
 };
 
+export const addBulkStockEntry = async (req, res, next) => {
+  try {
+    const { supplierName, invoiceRef, items } = req.body;
+
+    if (!supplierName || !items?.length) {
+      res.status(400);
+      return next(new Error('Supplier name and at least one item are required'));
+    }
+
+    for (const item of items) {
+      const partDoc = await Part.findById(item.part);
+      if (!partDoc) {
+        res.status(404);
+        return next(new Error('Part not found'));
+      }
+    }
+
+    const totalCost = items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0);
+
+    const entry = await BulkStockEntry.create({
+      supplierName,
+      invoiceRef,
+      totalCost,
+      items,
+      createdBy: req.user._id,
+    });
+
+    res.status(201).json({ success: true, message: 'Bulk stock entry created', data: entry });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Get all stock entries (paginated)
 // @route   GET /api/stock
 // @access  Protected
@@ -45,8 +79,7 @@ export const getStockEntries = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     const filter = {};
-    if (req.query.part) filter.part = req.query.part;
-    if (req.query.type) filter.type = req.query.type;
+    if (req.query.supplier) filter.supplierName = { $regex: req.query.supplier, $options: 'i' };
     if (req.query.startDate || req.query.endDate) {
       filter.createdAt = {};
       if (req.query.startDate) filter.createdAt.$gte = new Date(req.query.startDate);
@@ -54,13 +87,14 @@ export const getStockEntries = async (req, res, next) => {
     }
 
     const [entries, total] = await Promise.all([
-      StockEntry.find(filter)
-        .populate('part', 'name category')
+      BulkStockEntry.find(filter)
+        .populate('items.part', 'name sku category')
+        .populate('createdBy', 'name')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      StockEntry.countDocuments(filter),
+      BulkStockEntry.countDocuments(filter),
     ]);
 
     res.json({
@@ -78,9 +112,9 @@ export const getStockEntries = async (req, res, next) => {
 // @access  Protected
 export const getStockEntryById = async (req, res, next) => {
   try {
-    const entry = await StockEntry.findById(req.params.id)
-      .populate('part', 'name category brand')
-      .populate('enteredBy', 'name email')
+    const entry = await BulkStockEntry.findById(req.params.id)
+      .populate('items.part', 'name category brand sku')
+      .populate('createdBy', 'name email')
       .lean();
 
     if (!entry) {
@@ -99,16 +133,16 @@ export const getStockEntryById = async (req, res, next) => {
 // @access  Protected, Admin
 export const deleteStockEntry = async (req, res, next) => {
   try {
-    const entry = await StockEntry.findById(req.params.id);
+    const entry = await BulkStockEntry.findById(req.params.id);
 
     if (!entry) {
       res.status(404);
       return next(new Error('Stock entry not found'));
     }
 
-    // Reverse the stock adjustment made when entry was created
-    const reversal = entry.type === 'in' ? -entry.quantity : entry.quantity;
-    await Part.findByIdAndUpdate(entry.part, { $inc: { stock: reversal } });
+    for (const item of entry.items) {
+      await Part.findByIdAndUpdate(item.part, { $inc: { stock: -item.quantity } });
+    }
 
     await entry.deleteOne();
 
