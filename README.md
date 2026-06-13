@@ -1,6 +1,6 @@
-# 🔧 Bike Jumps Management System
+# 🏍️ MA Vendor Admin Panel
 
-A specialized **MERN Stack** workshop management application for tracking, stocking, assembling, and cataloging motorcycle suspension components (locally known as "Jumps"). Designed for mechanics, workshop owners, and retailers who manage individual shock absorber parts at a granular level.
+A comprehensive MERN Stack workshop management and POS application for bike shops and manufacturing units. The system tracks bike categories, raw materials (with quality grading, pricing, and alert thresholds), finished assembly production, POS sales, and outstanding dues (Udhaar).
 
 ---
 
@@ -11,72 +11,67 @@ vendor/
 ├── client/                        # React (Vite) Frontend
 │   ├── src/
 │   │   ├── components/            # Reusable UI elements
-│   │   ├── pages/                 # Route-level page views
+│   │   ├── pages/                 # Route-level page views (POS, Bikes, Assembly...)
 │   │   ├── context/               # Global state & theme provider
-│   │   ├── hooks/                 # Custom React hooks
-│   │   ├── services/              # API request layer
-│   │   └── utils/                 # Helper functions & constants
+│   │   ├── services/              # API request axios layers
+│   │   └── utils/                 # Helpers
 │   ├── .env                       # Local frontend env variables
 │   └── .env.example               # Environment variable template
 │
 ├── server/                        # Node.js + Express Backend
 │   ├── config/
-│   │   └── db.js                  # MongoDB Atlas connection
-│   ├── controllers/               # Business logic handlers
-│   ├── middleware/                # Auth, error handling
-│   ├── models/                    # Mongoose data schemas
-│   ├── routes/                    # API endpoint routes
-│   ├── utils/                     # Utilities (JWT generator etc.)
+│   │   ├── db.js                  # MongoDB Atlas connection
+│   │   └── cloudinary.js          # Cloudinary SDK settings
+│   ├── controllers/               # CRUD and logic controller handlers
+│   ├── middleware/                # Auth, image upload, error layers
+│   ├── models/                    # Mongoose database schemas (Bike, RawMaterial, Assemble, Sale)
+│   ├── routes/                    # Express API endpoints
+│   ├── utils/                     # JWT generators and helpers
 │   ├── .env                       # Local server env variables
 │   └── .env.example               # Environment variable template
 │
 ├── docs/
 │   ├── PRD.md                     # Product Requirement Document
 │   ├── TRD.md                     # Technical Requirement Document
-│   └── SRD.md                     # Software Requirement Document
-│
-└── README.md                      # You are here!
+│   ├── SRD.md                     # Software Requirement Document
+│   └── RULES.md                   # Strict development rules
 ```
 
 ---
 
-## 🔄 System Workflow
+## 🔄 Core Business Flow
 
 ```
-1. RECEIVE PARTS (Bulk Stocking)
+1. BIKE CATEGORIES
    ┌──────────────────────────────────────┐
-   │ Manager logs a Bulk Stock Entry      │
-   │ - Supplier name + invoice reference  │
-   │ - Parts list with qty & unit cost    │
-   │ → Stock levels auto-incremented      │
+   │ Admin defines bike models            │
+   │ - Custom names + image uploads       │
+   │ - Serves as master mapping entity    │
    └──────────────────────────────────────┘
               ↓
-2. CATALOG MANAGEMENT
+2. MATERIAL CONFIGURATION
    ┌──────────────────────────────────────┐
-   │ Parts are browsable in the catalog   │
-   │ - Searchable by name, category       │
-   │ - Each part has a Grade selector     │
-   │   (Grade A: Premium / Kabli)         │
-   │   (Grade B: Standard / Regular)      │
-   │   (Grade C: Second-Hand / Restored)  │
-   │   (Grade D: Budget / Local)          │
+   │ Define parts, qualities & price      │
+   │ - Map material to a bike & part type │
+   │ - Variations (Quality A, B, C, etc.)  │
+   │ - Quantities, prices & alert bounds  │
    └──────────────────────────────────────┘
               ↓
-3. ASSEMBLY (POS Interface)
+3. PRODUCTION & ASSEMBLY
    ┌──────────────────────────────────────┐
-   │ Technician opens Assembly Ticket     │
-   │ - Select bike category (70cc/125cc)  │
-   │ - Add parts + assign Grade per part  │
-   │ - Select worker name                 │
-   │ - Submit → Stock auto-decremented    │
-   │ - Assembly saved as "Pending"        │
+   │ Technicians assemble parts           │
+   │ - Select active tab (Front, Rear...) │
+   │ - Select quality per component       │
+   │ - Submit → Raw stock decremented     │
+   │ - Merges/saves finished assemblies   │
    └──────────────────────────────────────┘
               ↓
-4. QUALITY CHECK & COMPLETION
+4. POS QUICK SALE
    ┌──────────────────────────────────────┐
-   │ Manager reviews the assembly         │
-   │ - Marks status as "Ready"            │
-   │ - Counted towards worker's output    │
+   │ Sell parts or finished assemblies    │
+   │ - Add items to cart (live images)    │
+   │ - Select Cash, Online, or Partial    │
+   │ - Tracks customer names & due bills  │
    └──────────────────────────────────────┘
 ```
 
@@ -90,7 +85,7 @@ vendor/
 | **Backend** | Node.js, Express.js (ES Modules) |
 | **Database** | MongoDB Atlas (Cloud) + Mongoose |
 | **Auth** | JWT in HTTP-only Cookie |
-| **Images** | Cloudinary (signed uploads) |
+| **Images** | Cloudinary (signed stream uploads) |
 
 ---
 
@@ -101,77 +96,46 @@ vendor/
 - MongoDB Atlas account
 - Cloudinary account
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/Konete326/Vendor.git
-cd vendor
-```
-
-### 2. Install Server Dependencies
+### 1. Install Server Dependencies
 ```bash
 cd server
 npm install
 ```
 
-### 3. Configure Server Environment
-Copy the example file and fill in your values:
+### 2. Configure Server Environment
+Create your `.env` file from the committed template:
 ```bash
 cp .env.example .env
 ```
-Set values for: `MONGO_URI`, `JWT_SECRET`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+Fill in values for `MONGODB_URI`, `JWT_SECRET`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`.
 
-### 4. Install Client Dependencies
+### 3. Install Client Dependencies
 ```bash
 cd ../client
 npm install
 ```
 
-### 5. Configure Client Environment
+### 4. Configure Client Environment
 ```bash
 cp .env.example .env
 ```
-Set `VITE_API_URL` to your running API server address.
+Set `VITE_API_URL` to your Express server URL.
 
-### 6. Run in Development
+### 5. Run in Development
 ```bash
 # Terminal 1 - Backend
-cd server && npm run dev
+cd server
+npm run dev
 
 # Terminal 2 - Frontend
-cd client && npm run dev
+cd client
+npm run dev
 ```
 
 ---
 
-## 🎨 UI & Design
+## 🎨 UI & Design Details
 
-- **Dark / Light Theme**: Click the theme toggle button in the navbar to instantly switch between a premium dark mode and a clean bright white mode.
-- **POS Screen**: Split-panel interface — left shows the searchable parts catalog, right shows the active assembly ticket basket with worker assignment and grade selections.
-- **Responsive**: Fully mobile-friendly from 320px screens up to wide monitors.
-
----
-
-## 📄 Documentation
-
-| Document | Description |
-|---|---|
-| [PRD.md](./docs/PRD.md) | Product requirements, user stories, and business workflows |
-| [TRD.md](./docs/TRD.md) | Architecture, database models, Cloudinary, and auth strategy |
-| [SRD.md](./docs/SRD.md) | API endpoint specifications and system constraints |
-| [cloude.md](./cloude.md) | Development guide, coding standards, and operational rules |
-
----
-
-## 🔐 Security
-
-- Passwords are hashed with **bcryptjs** before storage.
-- JWT tokens are stored only in **HTTP-only cookies** — inaccessible to client-side JavaScript.
-- All `.env` files are excluded from version control via `.gitignore`.
-
----
-
-## 📦 Git Notes
-
-- All `node_modules` and local `.env` files are in `.gitignore`.
-- `.env.example` files are committed as templates — copy them and fill in your own values.
-- Main branch: `main`
+- **Dark / Light Theme**: Built-in responsive theme toggling. Custom thin scrollbars dynamically adapt theme colors on scrollable containers.
+- **Sticky Form Sidebar:** Layouts on New Assembly and POS pages keep forms/carts fixed to the screen while catalog cards scroll.
+- **Live Widgets:** The dashboard widgets present real-time revenue, total invoices, outstanding due metrics, recent invoices logs, and low-stock indicators.
