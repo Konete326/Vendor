@@ -23,8 +23,8 @@ export default function AssembleHistoryPage() {
         assemblesAPI.getAll(params),
         bikesAPI.getAll(),
       ])
-      setAssemblies(aRes.data.data)
-      setBikes(bRes.data.data)
+      setAssemblies(aRes.data?.data || aRes.data || [])
+      setBikes(bRes.data?.data || bRes.data || [])
     } catch {
       alert('Error fetching assembly logs')
     } finally {

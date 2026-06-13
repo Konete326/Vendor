@@ -24,9 +24,9 @@ export default function Dashboard() {
           rawMaterialsAPI.getAll(),
         ])
 
-        const salesData = salesRes.data.data
-        const bikesData = bikesRes.data.data
-        const materialsData = materialsRes.data.data
+        const salesData = salesRes.data?.data || salesRes.data || {}
+        const bikesData = bikesRes.data?.data || bikesRes.data || []
+        const materialsData = materialsRes.data?.data || materialsRes.data || []
 
         // Calculate low stock items
         let lowStockCount = 0

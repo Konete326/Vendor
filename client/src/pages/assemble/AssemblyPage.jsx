@@ -20,9 +20,10 @@ export default function AssemblyPage() {
       try {
         setLoading(true)
         const bRes = await bikesAPI.getAll()
-        setBikes(bRes.data.data)
-        if (bRes.data.data.length > 0) {
-          setSelectedBike(bRes.data.data[0]._id)
+        const bikes = bRes.data?.data || bRes.data || []
+        setBikes(bikes)
+        if (bikes.length > 0) {
+          setSelectedBike(bikes[0]._id)
         }
       } catch {
         setError('Error fetching initial assembly details')
@@ -38,9 +39,10 @@ export default function AssemblyPage() {
     const fetchMaterials = async () => {
       try {
         const mRes = await rawMaterialsAPI.getAll({ bike: selectedBike, partType: activeTab })
-        setMaterials(mRes.data.data)
+        const matList = mRes.data?.data || mRes.data || []
+        setMaterials(matList)
         const newSelections = {}
-        mRes.data.data.forEach((m) => {
+        matList.forEach((m) => {
           newSelections[m._id] = {
             qualityName: m.qualities[0]?.qualityName || '',
             usedQuantity: 1,
@@ -93,7 +95,7 @@ export default function AssemblyPage() {
       setAssemblyName('')
       setTotalQuantity(1)
       const freshMat = await rawMaterialsAPI.getAll({ bike: selectedBike, partType: activeTab })
-      setMaterials(freshMat.data.data)
+      setMaterials(freshMat.data?.data || freshMat.data || [])
     } catch (err) {
       setError(err.response?.data?.message || 'Error recording assembly')
     } finally {

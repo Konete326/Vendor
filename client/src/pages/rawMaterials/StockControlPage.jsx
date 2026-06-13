@@ -22,8 +22,8 @@ export default function StockControlPage() {
         rawMaterialsAPI.getAll(filterBike ? { bike: filterBike } : {}),
         bikesAPI.getAll(),
       ])
-      setMaterials(mRes.data.data)
-      setBikes(bRes.data.data)
+      setMaterials(mRes.data?.data || mRes.data || [])
+      setBikes(bRes.data?.data || bRes.data || [])
     } catch {
       alert('Error fetching inventory')
     } finally {

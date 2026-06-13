@@ -16,7 +16,7 @@ export default function BikesPage() {
     try {
       setLoading(true)
       const res = await bikesAPI.getAll()
-      setBikes(res.data.data)
+      setBikes(res.data?.data || res.data || [])
     } catch (err) {
       setError(err.response?.data?.message || 'Error fetching bikes')
     } finally {
