@@ -5,11 +5,6 @@
 **/dist/
 **/dist-ssr/
 
-# Environment local files (secrets)
-**/.env
-**/.env.local
-**/.env.*.local
-
 # Logs
 **/logs/
 **/*.log
@@ -25,4 +20,4 @@
 Thumbs.db
 
 # Agent skills documentation
-docs/skills/
+
