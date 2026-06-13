@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { FunnelIcon, CalendarIcon, CurrencyDollarIcon, CreditCardIcon } from '@heroicons/react/24/outline'
-import { salesAPI, bikesAPI } from '../../services/api'
+import { salesAPI, bikesAPI, extractArray } from '../../services/api'
 
 export default function SalesHistoryPage() {
   const [sales, setSales] = useState([])
@@ -34,13 +34,14 @@ export default function SalesHistoryPage() {
         bikesAPI.getAll(),
       ])
 
-      setSales(sRes.data.data.sales)
+      const salesData = sRes.data?.data || sRes.data || {}
+      setSales(salesData.sales || [])
       setAggregates({
-        totalSales: sRes.data.data.totalSales,
-        totalReceived: sRes.data.data.totalReceived,
-        totalDue: sRes.data.data.totalDue,
+        totalSales: salesData.totalSales || 0,
+        totalReceived: salesData.totalReceived || 0,
+        totalDue: salesData.totalDue || 0,
       })
-      setBikes(bRes.data.data)
+      setBikes(extractArray(bRes))
     } catch {
       alert('Error fetching sales history')
     } finally {

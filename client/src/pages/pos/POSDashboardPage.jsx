@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { rawMaterialsAPI, assemblesAPI, bikesAPI, salesAPI } from '../../services/api'
+import { rawMaterialsAPI, assemblesAPI, bikesAPI, salesAPI, extractArray } from '../../services/api'
 import POSCart from './POSCart'
 import CheckoutModal from './CheckoutModal'
 
@@ -27,9 +27,9 @@ export default function POSDashboardPage() {
         rawMaterialsAPI.getAll(selectedBike ? { bike: selectedBike } : {}),
         assemblesAPI.getAll(selectedBike ? { bike: selectedBike } : {}),
       ])
-      setBikes(bRes.data.data)
-      setMaterials(mRes.data.data)
-      setAssemblies(aRes.data.data)
+      setBikes(extractArray(bRes))
+      setMaterials(extractArray(mRes))
+      setAssemblies(extractArray(aRes))
     } catch {
       alert('Error fetching POS data')
     } finally {
