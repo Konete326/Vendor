@@ -1,7 +1,20 @@
 import axios from 'axios'
 
+let apiURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+if (apiURL) {
+  // If it is a domain name and protocol is missing, prepend https://
+  if (!apiURL.startsWith('http://') && !apiURL.startsWith('https://') && apiURL.includes('.')) {
+    apiURL = `https://${apiURL}`;
+  }
+  // Ensure the URL ends with /api (without appending it twice)
+  if (!apiURL.endsWith('/api') && !apiURL.endsWith('/api/')) {
+    apiURL = apiURL.endsWith('/') ? `${apiURL}api` : `${apiURL}/api`;
+  }
+}
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: apiURL,
   withCredentials: true,
 })
 
