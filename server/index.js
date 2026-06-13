@@ -12,11 +12,23 @@ import assembleRoutes from './routes/assembleRoutes.js';
 import saleRoutes from './routes/saleRoutes.js';
 
 
-connectDB();
-
 const app = express();
 
 app.set('trust proxy', 1);
+
+// Middleware to ensure database is connected before handling requests
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: 'Database connection failed. Please check MONGODB_URI and IP access rules.',
+      error: err.message
+    });
+  }
+});
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
