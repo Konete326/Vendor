@@ -16,6 +16,8 @@ connectDB();
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
