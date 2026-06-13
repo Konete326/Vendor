@@ -8,13 +8,13 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import ProfilePage from './pages/ProfilePage'
-import PartsPage from './pages/parts/PartsPage'
-import AddPartPage from './pages/parts/AddPartPage'
-import EditPartPage from './pages/parts/EditPartPage'
-import StockPage from './pages/stock/StockPage'
-import AddStockPage from './pages/stock/AddStockPage'
-import JumpsPage from './pages/jumps/JumpsPage'
-import AddJumpPage from './pages/jumps/AddJumpPage'
+import BikesPage from './pages/bikes/BikesPage'
+import MaterialConfigPage from './pages/rawMaterials/MaterialConfigPage'
+import StockControlPage from './pages/rawMaterials/StockControlPage'
+import AssemblyPage from './pages/assemble/AssemblyPage'
+import AssembleHistoryPage from './pages/assemble/AssembleHistoryPage'
+import POSDashboardPage from './pages/pos/POSDashboardPage'
+import SalesHistoryPage from './pages/sales/SalesHistoryPage'
 
 function App() {
   return (
@@ -31,13 +31,13 @@ function App() {
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/parts" element={<PartsPage />} />
-                <Route path="/parts/add" element={<AddPartPage />} />
-                <Route path="/parts/:id/edit" element={<EditPartPage />} />
-                <Route path="/stock" element={<StockPage />} />
-                <Route path="/stock/add" element={<AddStockPage />} />
-                <Route path="/jumps" element={<JumpsPage />} />
-                <Route path="/jumps/add" element={<AddJumpPage />} />
+                <Route path="/bikes/category" element={<BikesPage />} />
+                <Route path="/bikes/raw-material" element={<MaterialConfigPage />} />
+                <Route path="/bikes/raw-material-inventory" element={<StockControlPage />} />
+                <Route path="/bikes/assemble" element={<AssemblyPage />} />
+                <Route path="/bikes/assemble-history" element={<AssembleHistoryPage />} />
+                <Route path="/pos" element={<POSDashboardPage />} />
+                <Route path="/sales-history" element={<SalesHistoryPage />} />
               </Route>
             </Route>
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

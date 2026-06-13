@@ -12,27 +12,31 @@ export const authAPI = {
   getProfile: () => API.get('/auth/profile'),
 }
 
-export const partsAPI = {
-  getAll: (params) => API.get('/parts', { params }),
-  getById: (id) => API.get(`/parts/${id}`),
-  create: (data) => API.post('/parts', data),
-  update: (id, data) => API.put(`/parts/${id}`, data),
-  delete: (id) => API.delete(`/parts/${id}`),
+export const bikesAPI = {
+  getAll: () => API.get('/bikes'),
+  create: (data) => API.post('/bikes', data),
+  update: (id, data) => API.put(`/bikes/${id}`, data),
+  delete: (id) => API.delete(`/bikes/${id}`),
 }
 
-export const stockAPI = {
-  getAll: (params) => API.get('/stock', { params }),
-  getById: (id) => API.get(`/stock/${id}`),
-  create: (data) => API.post('/stock', data),
-  delete: (id) => API.delete(`/stock/${id}`),
+export const rawMaterialsAPI = {
+  getAll: (params) => API.get('/raw-materials', { params }),
+  create: (data) => API.post('/raw-materials', data),
+  update: (id, data) => API.put(`/raw-materials/${id}`, data),
+  delete: (id) => API.delete(`/raw-materials/${id}`),
+  adjustStock: (id, data) => API.put(`/raw-materials/${id}/stock`, data),
 }
 
-export const jumpsAPI = {
-  getAll: (params) => API.get('/jumps', { params }),
-  getById: (id) => API.get(`/jumps/${id}`),
-  create: (data) => API.post('/jumps', data),
-  updateStatus: (id, status) => API.put(`/jumps/${id}/status`, { status }),
-  delete: (id) => API.delete(`/jumps/${id}`),
+export const assemblesAPI = {
+  getAll: (params) => API.get('/assembles', { params }),
+  create: (data) => API.post('/assembles', data),
+  update: (id, data) => API.put(`/assembles/${id}`, data),
+  delete: (id) => API.delete(`/assembles/${id}`),
+}
+
+export const salesAPI = {
+  getAll: (params) => API.get('/sales', { params }),
+  create: (data) => API.post('/sales', data),
 }
 
 export default API

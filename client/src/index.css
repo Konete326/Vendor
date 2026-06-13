@@ -28,3 +28,24 @@
     }
   }
 }
+
+/* Custom Scrollbars matching light/dark theme variables */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-app-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-app-input-border);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-app-border) transparent;
+}
