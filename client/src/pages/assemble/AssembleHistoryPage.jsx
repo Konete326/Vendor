@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { TrashIcon, PencilIcon, FunnelIcon } from '@heroicons/react/24/outline'
-import { assemblesAPI, bikesAPI } from '../../services/api'
+import { assemblesAPI, bikesAPI, extractArray } from '../../services/api'
 
 export default function AssembleHistoryPage() {
   const [assemblies, setAssemblies] = useState([])
@@ -23,8 +23,8 @@ export default function AssembleHistoryPage() {
         assemblesAPI.getAll(params),
         bikesAPI.getAll(),
       ])
-      setAssemblies(aRes.data?.data || aRes.data || [])
-      setBikes(bRes.data?.data || bRes.data || [])
+      setAssemblies(extractArray(aRes))
+      setBikes(extractArray(bRes))
     } catch {
       alert('Error fetching assembly logs')
     } finally {

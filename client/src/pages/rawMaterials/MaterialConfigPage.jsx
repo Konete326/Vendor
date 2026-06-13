@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { PlusIcon, PencilIcon, TrashIcon, FunnelIcon } from '@heroicons/react/24/outline'
-import { rawMaterialsAPI, bikesAPI } from '../../services/api'
+import { rawMaterialsAPI, bikesAPI, extractArray } from '../../services/api'
 import MaterialFormModal from './MaterialFormModal'
 
 export default function MaterialConfigPage() {
@@ -18,8 +18,8 @@ export default function MaterialConfigPage() {
         rawMaterialsAPI.getAll(filterBike ? { bike: filterBike } : {}),
         bikesAPI.getAll(),
       ])
-      setMaterials(mRes.data?.data || mRes.data || [])
-      setBikes(bRes.data?.data || bRes.data || [])
+      setMaterials(extractArray(mRes))
+      setBikes(extractArray(bRes))
     } catch {
       alert('Error fetching raw material configuration')
     } finally {

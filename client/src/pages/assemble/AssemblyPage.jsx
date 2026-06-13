@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { bikesAPI, rawMaterialsAPI, assemblesAPI } from '../../services/api'
+import { bikesAPI, rawMaterialsAPI, assemblesAPI, extractArray } from '../../services/api'
 import MaterialCard from './MaterialCard'
 
 export default function AssemblyPage() {
@@ -20,7 +20,7 @@ export default function AssemblyPage() {
       try {
         setLoading(true)
         const bRes = await bikesAPI.getAll()
-        const bikes = bRes.data?.data || bRes.data || []
+        const bikes = extractArray(bRes)
         setBikes(bikes)
         if (bikes.length > 0) {
           setSelectedBike(bikes[0]._id)
@@ -39,7 +39,7 @@ export default function AssemblyPage() {
     const fetchMaterials = async () => {
       try {
         const mRes = await rawMaterialsAPI.getAll({ bike: selectedBike, partType: activeTab })
-        const matList = mRes.data?.data || mRes.data || []
+        const matList = extractArray(mRes)
         setMaterials(matList)
         const newSelections = {}
         matList.forEach((m) => {
@@ -95,7 +95,7 @@ export default function AssemblyPage() {
       setAssemblyName('')
       setTotalQuantity(1)
       const freshMat = await rawMaterialsAPI.getAll({ bike: selectedBike, partType: activeTab })
-      setMaterials(freshMat.data?.data || freshMat.data || [])
+      setMaterials(extractArray(freshMat))
     } catch (err) {
       setError(err.response?.data?.message || 'Error recording assembly')
     } finally {

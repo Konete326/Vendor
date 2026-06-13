@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
-import { bikesAPI } from '../../services/api'
+import { bikesAPI, extractArray } from '../../services/api'
 
 export default function BikesPage() {
   const [bikes, setBikes] = useState([])
@@ -16,7 +16,7 @@ export default function BikesPage() {
     try {
       setLoading(true)
       const res = await bikesAPI.getAll()
-      setBikes(res.data?.data || res.data || [])
+      setBikes(extractArray(res))
     } catch (err) {
       setError(err.response?.data?.message || 'Error fetching bikes')
     } finally {

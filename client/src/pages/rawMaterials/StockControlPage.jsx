@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { PlusIcon, PencilSquareIcon, FunnelIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
-import { rawMaterialsAPI, bikesAPI } from '../../services/api'
+import { rawMaterialsAPI, bikesAPI, extractArray } from '../../services/api'
 
 export default function StockControlPage() {
   const [materials, setMaterials] = useState([])
@@ -22,8 +22,8 @@ export default function StockControlPage() {
         rawMaterialsAPI.getAll(filterBike ? { bike: filterBike } : {}),
         bikesAPI.getAll(),
       ])
-      setMaterials(mRes.data?.data || mRes.data || [])
-      setBikes(bRes.data?.data || bRes.data || [])
+      setMaterials(extractArray(mRes))
+      setBikes(extractArray(bRes))
     } catch {
       alert('Error fetching inventory')
     } finally {

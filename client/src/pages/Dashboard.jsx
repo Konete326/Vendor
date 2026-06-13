@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ShoppingCartIcon, CurrencyDollarIcon, CreditCardIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
-import { salesAPI, bikesAPI, rawMaterialsAPI } from '../services/api'
+import { salesAPI, bikesAPI, rawMaterialsAPI, extractArray } from '../services/api'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 
 export default function Dashboard() {
@@ -25,8 +25,8 @@ export default function Dashboard() {
         ])
 
         const salesData = salesRes.data?.data || salesRes.data || {}
-        const bikesData = bikesRes.data?.data || bikesRes.data || []
-        const materialsData = materialsRes.data?.data || materialsRes.data || []
+        const bikesData = extractArray(bikesRes)
+        const materialsData = extractArray(materialsRes)
 
         // Calculate low stock items
         let lowStockCount = 0

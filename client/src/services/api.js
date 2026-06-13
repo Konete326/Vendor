@@ -5,6 +5,17 @@ const API = axios.create({
   withCredentials: true,
 })
 
+// Safely extracts array from any API response shape:
+// { data: { data: [...] } }  →  res.data.data
+// { data: [...] }            →  res.data
+// anything else              →  []
+export const extractArray = (res) => {
+  const d = res?.data
+  if (Array.isArray(d?.data)) return d.data
+  if (Array.isArray(d)) return d
+  return []
+}
+
 export const authAPI = {
   login: (data) => API.post('/auth/login', data),
   register: (data) => API.post('/auth/register', data),
